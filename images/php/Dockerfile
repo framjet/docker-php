@@ -31,6 +31,7 @@ RUN \
     \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS $PHPIZE_DEPS_EXTRA \
       git \
+      openssh \
       libzip-dev \
       oniguruma-dev \
       libpng-dev \
@@ -43,7 +44,7 @@ RUN \
     # Compile and install grpc extension (its 1000x faster than installing through pecl)
     \
     && GRPC_VERSION=$(apk info grpc -d | grep grpc | cut -d- -f2)  \
-    && git clone --depth 1 -b v${GRPC_VERSION} https://github.com/grpc/grpc /tmp/grpc \
+    && git clone --depth 1 -b v${GRPC_VERSION} git@github.com:grpc/grpc.git /tmp/grpc \
     && cd /tmp/grpc/src/php/ext/grpc \
     && phpize \
     && ./configure \
