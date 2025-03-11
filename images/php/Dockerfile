@@ -6,7 +6,7 @@ FROM ${UPTRACK_SOURCE} AS base
 LABEL org.opencontainers.image.authors="Aurimas Niekis <aurimas@niekis.lt>"
 
 
-ARG PHP_EXTENSIONS="intl pdo pdo_mysql mbstring exif pcntl bcmath gd opcache zip"
+ARG PHP_EXTENSIONS="intl pdo pdo_mysql mbstring exif pcntl bcmath gd opcache xsl zip"
 ARG PECL_EXTENSIONS="redis amqp"
 ARG PHPIZE_DEPS_EXTRA=""
 ARG PHPIZE_DEPS_RUNTIME_EXTRA=""
@@ -22,6 +22,7 @@ WORKDIR /var/www/html
 RUN apk add --no-cache $PHPIZE_DEPS_RUNTIME_EXTRA \
 		libpng \
         libzip \
+        libxslt \
         rabbitmq-c-dev \
         grpc-cpp \
         ;
@@ -31,6 +32,7 @@ RUN \
     \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS $PHPIZE_DEPS_EXTRA \
       git \
+      libxslt-dev \
       libzip-dev \
       oniguruma-dev \
       libpng-dev \
