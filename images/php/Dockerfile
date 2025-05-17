@@ -11,6 +11,7 @@ ARG PECL_EXTENSIONS="redis amqp"
 ARG PHPIZE_DEPS_EXTRA=""
 ARG PHPIZE_DEPS_RUNTIME_EXTRA=""
 
+ENV PHP_INI_SCAN_DIR=":/usr/local/etc/php/custom.d"
 ENV PHP_EXTENSIONS="${PHP_EXTENSIONS}"
 ENV PECL_EXTENSIONS="${PECL_EXTENSIONS}"
 ENV PHPIZE_DEPS_EXTRA="${PHPIZE_DEPS_EXTRA}"
@@ -63,6 +64,8 @@ RUN \
     && { find /usr/local/lib -type f -print0 | xargs -0r strip --strip-all -p 2>/dev/null || true; } \
     && apk del .build-deps \
     && mkdir /docker-entrypoint.d \
+    && mkdir /usr/local/etc/php-fpm.custom.d \
+    && mkdir /usr/local/etc/php/custom.d \
     && sed -i 's/^access.log = \/proc\/self\/fd\/2/;access.log = \/proc\/self\/fd\/2/g' /usr/local/etc/php-fpm.d/docker.conf \
     ;
 
@@ -72,6 +75,7 @@ COPY --from=comp --chown=root /usr/bin/composer /usr/local/bin/composer
 # Copy configuration
 COPY --chown=root ./conf.d/* /usr/local/etc/php/conf.d/
 COPY --chown=root ./www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY --chown=root ./php-fpm.conf /usr/local/etc/php-fpm.conf
 
 # Copy entrypoints
 COPY --chown=root ./docker-entrypoint.d/* /docker-entrypoint.d/
