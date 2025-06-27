@@ -1,6 +1,7 @@
 ARG UPTRACK_SOURCE=php:fpm-alpine
 ARG COMPOSER_VERSION=latest
 FROM composer:${COMPOSER_VERSION} AS comp
+FROM framjet/alpine:latest AS alpine
 FROM ${UPTRACK_SOURCE} AS base
 
 LABEL org.opencontainers.image.authors="Aurimas Niekis <aurimas@niekis.lt>"
@@ -72,13 +73,19 @@ RUN \
 # Install Composer
 COPY --from=comp --chown=root /usr/bin/composer /usr/local/bin/composer
 
+# Copy wait4x binary from alpine image
+COPY --from=alpine --chown=root /usr/local/bin/wait4x /usr/local/bin/wait4x
+
 # Copy configuration
 COPY --chown=root ./conf.d/* /usr/local/etc/php/conf.d/
 COPY --chown=root ./www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY --chown=root ./php-fpm.conf /usr/local/etc/php-fpm.conf
 
-# Copy entrypoints
-COPY --chown=root ./docker-entrypoint.d/* /docker-entrypoint.d/
+# Copy entrypoints from alpine base image
+COPY --chown=root --from=alpine /docker-entrypoint.d/* /docker-entrypoint.d/
+COPY --chown=root --from=alpine /docker-entrypoint.functions /docker-entrypoint.functions
+
+# Copy entrypoint
 COPY --chown=root ./docker-entrypoint.sh /docker-entrypoint.sh
 
 # Copy minify script
@@ -131,9 +138,6 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS $DEV_PHPIZE_DEPS_EXTRA
 # Copy dev configuration
 COPY --chown=root ./conf.dev.d/* /usr/local/etc/php/conf.d/
 COPY --chown=root ./www.dev.conf /usr/local/etc/php-fpm.d/www.conf
-
-# Copy dev entrypoints
-COPY --chown=root ./docker-entrypoint.dev.d/* /docker-entrypoint.d/
 
 RUN apk add --no-cache   \
     && sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
@@ -196,9 +200,6 @@ ENV APP_DEBUG=${APP_DEBUG}
 # Copy prod configuration
 COPY --chown=root ./conf.prod.d/* /usr/local/etc/php/conf.d/
 COPY --chown=root ./www.prod.conf /usr/local/etc/php-fpm.d/www.conf
-
-# Copy prod entrypoints
-COPY --chown=root ./docker-entrypoint.prod.d/* /docker-entrypoint.d/
 
 RUN  \
     rm -rf /usr/src/php.tar.xz \
